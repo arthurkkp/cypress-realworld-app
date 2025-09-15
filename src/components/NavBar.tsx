@@ -29,6 +29,7 @@ import { Link as RouterLink, useLocation } from "react-router-dom";
 
 import { DataContext, DataEvents, DataSchema } from "../machines/dataMachine";
 import TransactionNavTabs from "./TransactionNavTabs";
+import NotificationBadge from "./NotificationBadge";
 import RWALogo from "./SvgRwaLogo";
 import RWALogoIcon from "./SvgRwaIconLogo";
 
@@ -170,21 +171,7 @@ const NavBar: React.FC<NavBarProps> = ({ drawerOpen, toggleDrawer, notifications
         >
           <AttachMoneyIcon /> New
         </Button>
-        <IconButton
-          color="inherit"
-          component={RouterLink}
-          to="/notifications"
-          data-test="nav-top-notifications-link"
-          size="large"
-        >
-          <Badge
-            badgeContent={allNotifications ? allNotifications.length : undefined}
-            data-test="nav-top-notifications-count"
-            classes={{ badge: classes.customBadge }}
-          >
-            <NotificationsIcon />
-          </Badge>
-        </IconButton>
+        <NotificationBadge notifications={allNotifications} />
       </Toolbar>
       {(match.pathname === "/" || RegExp("/(?:public|contacts|personal)").test(match.pathname)) && (
         <TransactionNavTabs />
