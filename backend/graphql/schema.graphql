@@ -1,10 +1,75 @@
+enum DefaultPrivacyLevel {
+  public
+  private
+  contacts
+}
+
+enum TransactionStatus {
+  pending
+  incomplete
+  complete
+}
+
+enum TransactionRequestStatus {
+  pending
+  accepted
+  rejected
+}
+
+enum PaymentNotificationStatus {
+  requested
+  received
+  incomplete
+}
+
+enum NotificationsType {
+  payment
+  like
+  comment
+}
+
+enum BankTransferType {
+  withdrawal
+  deposit
+}
+
+type PageData {
+  page: Int!
+  limit: Int!
+  hasNextPages: Boolean!
+  totalPages: Int!
+}
+
 type Query {
   listBankAccount: [BankAccount!]
+  users: UsersResponse!
+  searchUsers(q: String!): UsersResponse!
+  user(id: ID!): User
+  userProfile(username: String!): UserProfile
+  transactions(page: Int, limit: Int, status: TransactionStatus, dateRangeStart: String, dateRangeEnd: String, amountMin: Float, amountMax: Float): TransactionsResponse!
+  transactionsContacts(page: Int, limit: Int, status: TransactionStatus, dateRangeStart: String, dateRangeEnd: String, amountMin: Float, amountMax: Float): TransactionsResponse!
+  transactionsPublic(page: Int, limit: Int, q: String): TransactionsResponse!
+  transaction(id: ID!): TransactionResponseItem
+  contacts(username: String!): ContactsResponse!
+  likes(transactionId: ID!): LikesResponse!
+  comments(transactionId: ID!): CommentsResponse!
+  notifications: NotificationsResponse!
+  bankTransfers: BankTransfersResponse!
 }
 
 type Mutation {
   createBankAccount(bankName: String!, accountNumber: String!, routingNumber: String!): BankAccount
   deleteBankAccount(id: ID!): Boolean
+  createUser(input: UserInput!): UserResponse!
+  updateUser(id: ID!, input: UserUpdateInput!): Boolean
+  createTransaction(input: TransactionInput!): TransactionResponse!
+  updateTransaction(id: ID!, input: TransactionUpdateInput!): Boolean
+  createContact(contactUserId: ID!): ContactResponse!
+  deleteContact(id: ID!): ContactsResponse!
+  createLike(transactionId: ID!): Boolean
+  createComment(transactionId: ID!, content: String!): Boolean
+  createNotifications(items: [NotificationInput!]!): NotificationsResponse!
+  updateNotification(id: ID!, input: NotificationUpdateInput!): Boolean
 }
 
 type BankAccount {
@@ -17,4 +82,202 @@ type BankAccount {
   isDeleted: Boolean
   createdAt: String
   modifiedAt: String
+}
+
+type User {
+  id: ID!
+  uuid: String
+  firstName: String!
+  lastName: String!
+  username: String!
+  email: String!
+  phoneNumber: String!
+  balance: Float!
+  avatar: String!
+  defaultPrivacyLevel: DefaultPrivacyLevel!
+  createdAt: String!
+  modifiedAt: String!
+}
+
+type UserProfile {
+  firstName: String!
+  lastName: String!
+  avatar: String!
+}
+
+type Transaction {
+  id: ID!
+  uuid: String!
+  source: String!
+  amount: Float!
+  description: String!
+  privacyLevel: DefaultPrivacyLevel!
+  receiverId: String!
+  senderId: String!
+  balanceAtCompletion: Float
+  status: TransactionStatus!
+  requestStatus: TransactionRequestStatus
+  requestResolvedAt: String
+  createdAt: String!
+  modifiedAt: String!
+}
+
+type TransactionResponseItem {
+  id: ID!
+  uuid: String!
+  source: String!
+  amount: Float!
+  description: String!
+  privacyLevel: DefaultPrivacyLevel!
+  receiverId: String!
+  senderId: String!
+  balanceAtCompletion: Float
+  status: TransactionStatus!
+  requestStatus: TransactionRequestStatus
+  requestResolvedAt: String
+  createdAt: String!
+  modifiedAt: String!
+  likes: [Like!]!
+  comments: [Comment!]!
+  receiverName: String!
+  receiverAvatar: String!
+  senderName: String!
+  senderAvatar: String!
+}
+
+type Contact {
+  id: ID!
+  uuid: String!
+  userId: String!
+  contactUserId: String!
+  createdAt: String!
+  modifiedAt: String!
+}
+
+type Like {
+  id: ID!
+  uuid: String!
+  userId: String!
+  transactionId: String!
+  createdAt: String!
+  modifiedAt: String!
+}
+
+type Comment {
+  id: ID!
+  uuid: String!
+  content: String!
+  userId: String!
+  transactionId: String!
+  createdAt: String!
+  modifiedAt: String!
+}
+
+type Notification {
+  id: ID!
+  uuid: String!
+  userId: String!
+  transactionId: String!
+  isRead: Boolean!
+  createdAt: String!
+  modifiedAt: String!
+}
+
+type BankTransfer {
+  id: ID!
+  uuid: String!
+  userId: String!
+  source: String!
+  amount: Float!
+  type: BankTransferType!
+  transactionId: String!
+  createdAt: String!
+  modifiedAt: String!
+}
+
+type UsersResponse {
+  results: [User!]!
+}
+
+type TransactionsResponse {
+  results: [TransactionResponseItem!]!
+  pageData: PageData!
+}
+
+type ContactsResponse {
+  contacts: [Contact!]!
+}
+
+type LikesResponse {
+  likes: [Like!]!
+}
+
+type CommentsResponse {
+  comments: [Comment!]!
+}
+
+type NotificationsResponse {
+  results: [Notification!]!
+}
+
+type BankTransfersResponse {
+  transfers: [BankTransfer!]!
+}
+
+type UserResponse {
+  user: User!
+}
+
+type ContactResponse {
+  contact: Contact!
+}
+
+type TransactionResponse {
+  transaction: TransactionResponseItem!
+}
+
+input UserInput {
+  firstName: String!
+  lastName: String!
+  username: String!
+  password: String!
+  email: String!
+  phoneNumber: String!
+  balance: Float
+  avatar: String!
+  defaultPrivacyLevel: DefaultPrivacyLevel!
+}
+
+input UserUpdateInput {
+  firstName: String
+  lastName: String
+  email: String
+  phoneNumber: String
+  defaultPrivacyLevel: DefaultPrivacyLevel
+}
+
+input TransactionInput {
+  source: String!
+  amount: Float!
+  description: String!
+  privacyLevel: DefaultPrivacyLevel!
+  receiverId: String!
+  senderId: String!
+  transactionType: String!
+}
+
+input TransactionUpdateInput {
+  requestStatus: TransactionRequestStatus
+}
+
+input NotificationInput {
+  type: NotificationsType!
+  transactionId: String!
+  status: PaymentNotificationStatus
+  likeId: String
+  commentId: String
+}
+
+input NotificationUpdateInput {
+  isRead: Boolean
 }
