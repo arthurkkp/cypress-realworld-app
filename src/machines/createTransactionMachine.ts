@@ -1,5 +1,6 @@
 import { omit } from "lodash/fp";
 import { Machine, assign } from "xstate";
+import gql from "graphql-tag";
 import { dataMachine } from "./dataMachine";
 import { httpClient } from "../utils/asyncUtils";
 import { User, TransactionCreatePayload } from "../models";
@@ -14,13 +15,55 @@ export interface CreateTransactionMachineSchema {
   };
 }
 
+const createTransactionMutation = gql`
+  mutation CreateTransaction($input: TransactionInput!) {
+    createTransaction(input: $input) {
+      transaction {
+        id
+        uuid
+        source
+        amount
+        description
+        privacyLevel
+        receiverId
+        senderId
+        balanceAtCompletion
+        status
+        requestStatus
+        requestResolvedAt
+        createdAt
+        modifiedAt
+        likes {
+          id
+          userId
+          transactionId
+        }
+        comments {
+          id
+          content
+          userId
+          transactionId
+        }
+        receiverName
+        receiverAvatar
+        senderName
+        senderAvatar
+      }
+    }
+  }
+`;
+
 const transactionDataMachine = dataMachine("transactionData").withConfig({
   services: {
     createData: async (ctx, event: any) => {
       const payload = omit("type", event);
-      const resp = await httpClient.post(`http://localhost:${backendPort}/transactions`, payload);
+      const resp = await httpClient.post(`http://localhost:${backendPort}/graphql`, {
+        operationName: "CreateTransaction",
+        query: createTransactionMutation.loc?.source.body,
+        variables: { input: payload },
+      });
       authService.send("REFRESH");
-      return resp.data;
+      return resp.data.data.createTransaction;
     },
   },
 });

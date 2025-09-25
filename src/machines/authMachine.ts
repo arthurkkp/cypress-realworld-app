@@ -149,9 +149,33 @@ export const authMachine = Machine<AuthMachineContext, AuthMachineSchema, AuthMa
     services: {
       performSignup: async (ctx, event) => {
         const payload = omit("type", event);
-        const resp = await httpClient.post(`http://localhost:${backendPort}/users`, payload);
+        const createUserMutation = `
+          mutation CreateUser($input: UserInput!) {
+            createUser(input: $input) {
+              user {
+                id
+                uuid
+                firstName
+                lastName
+                username
+                email
+                phoneNumber
+                balance
+                avatar
+                defaultPrivacyLevel
+                createdAt
+                modifiedAt
+              }
+            }
+          }
+        `;
+        const resp = await httpClient.post(`http://localhost:${backendPort}/graphql`, {
+          operationName: "CreateUser",
+          query: createUserMutation,
+          variables: { input: payload },
+        });
         history.push("/signin");
-        return resp.data;
+        return resp.data.data.createUser;
       },
       performLogin: async (ctx, event) => {
         return await httpClient
